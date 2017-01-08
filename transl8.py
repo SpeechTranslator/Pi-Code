@@ -7,12 +7,12 @@ import argparse
 import pycurl
 import StringIO
 import os.path
- 
- 
+
+
 def speak_text(language, phrase):
     tts_url = "http://translate.google.com/translate_tts?tl=" + language + "&amp;q=" + phrase
     subprocess.call(["mplayer", tts_url], shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
- 
+
 def transcribe():
     key = '[Google API Key]'
     stt_url = 'https://www.google.com/speech-api/v2/recognize?output=json&amp;lang=en-us&amp;key=' + key
@@ -27,30 +27,30 @@ def transcribe():
     c.setopt(pycurl.URL, stt_url)
     fout = StringIO.StringIO()
     c.setopt(pycurl.WRITEFUNCTION, fout.write)
- 
+
     c.setopt(pycurl.POST, 1)
     c.setopt(pycurl.HTTPHEADER, ['Content-Type: audio/x-flac; rate=16000'])
- 
+
     file_size = os.path.getsize(filename)
     c.setopt(pycurl.POSTFIELDSIZE, file_size)
     fin = open(filename, 'rb')
     c.setopt(pycurl.READFUNCTION, fin.read)
     c.perform()
- 
+
     response_data = fout.getvalue()
- 
+
     start_loc = response_data.find("transcript")
     temp_str = response_data[start_loc + 13:]
     end_loc = temp_str.find("\"")
     final_result = temp_str[:end_loc]
     c.close()
     return final_result
- 
- 
+
+
 class Translator(object):
     oauth_url = 'https://datamarket.accesscontrol.windows.net/v2/OAuth2-13'
     translation_url = 'http://api.microsofttranslator.com/V2/Ajax.svc/Translate?'
- 
+
     def __init__(self):
         oauth_args = {
             'client_id': 'TranslatorPI',
@@ -60,15 +60,15 @@ class Translator(object):
         }
         oauth_junk = json.loads(requests.post(Translator.oauth_url, data=urllib.urlencode(oauth_args)).content)
         self.headers = {'Authorization': 'Bearer ' + oauth_junk['access_token']}
- 
+
     def translate(self, origin_language, destination_language, text):
         german_umlauts = {
             0xe4: u'ae',
-            ord(u'ö'): u'oe',
-            ord(u'ü'): u'ue',
-            ord(u'ß'): None,
+            ord(u'ï¿½'): u'oe',
+            ord(u'ï¿½'): u'ue',
+            ord(u'ï¿½'): None,
         }
- 
+
         translation_args = {
             'text': text,
             'to': destination_language,
@@ -82,8 +82,8 @@ class Translator(object):
         print "Translation: ", translation
         speak_text(origin_language, 'Translating ' + text)
         speak_text(destination_language, translation)
- 
- 
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Raspberry Pi - Translator.')
     parser.add_argument('-o', '--origin_language', help='Origin Language', required=True)
